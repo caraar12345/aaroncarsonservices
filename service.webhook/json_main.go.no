@@ -1,0 +1,36 @@
+package main
+
+import (
+  "net/http"
+  "log"
+  "fmt"
+  "encoding/json"
+)
+
+type webhook struct {
+  Action string
+  Repository struct {
+    ID  string
+    FullName  string
+  }
+}
+
+func handleWebhook(w http.ResponseWriter, r *http.Request) {
+  webhookData := make(map[string]interface{})
+  err := json.NewDecoder(r.Body).Decode(&webhookData)
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    return
+  }
+  fmt.Println("Got webhook payload:")
+  for key, value := range webhookData {
+    fmt.Printf("%s : %v\n", key, value)
+  }
+}
+
+func main() {
+  port := ":8080"
+  log.Println("Server started on", port)
+  http.HandleFunc("/webhook", handleWebhook)
+  log.Fatal(http.ListenAndServe(port, nil))
+}
